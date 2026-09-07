@@ -1,0 +1,14 @@
+# Secrets
+.env
+
+# macOS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Raw media
+*.mp4
+*.mov
+*.wav
+*.mp3
