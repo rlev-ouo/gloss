@@ -9,5 +9,17 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rlev-ouo/gloss.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rlev-ouo/gloss/issues"
+  },
+  "homepage": "https://github.com/rlev-ouo/gloss#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "openai": "^7.10.0"
+  }
 }
