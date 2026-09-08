@@ -1,14 +1,25 @@
-# Secrets
+# Environment variables
 .env
-
-# macOS
-.DS_Store
+.env.*
 
 # Dependencies
 node_modules/
 
-# Raw media
-*.mp4
-*.mov
-*.wav
-*.mp3
+# macOS
+.DS_Store
+
+# Recordings
+recordings/*
+!recordings/.gitkeep
+
+# Extracted audio
+audio/*
+!audio/.gitkeep
+
+# Raw transcripts
+transcripts/*
+!transcripts/.gitkeep
+
+# Generated Markdown
+markdowns/*
+!markdowns/.gitkeep
