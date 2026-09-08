@@ -1,72 +1,113 @@
 # Gloss.md
 
-Turn lesson recordings into Obsidian-ready Markdown notes.
+Turn lesson recordings into bilingual Obsidian Markdown notes.
 
-Gloss.md is a translation and transcription pipeline. You drop a recorded lesson in, and it produces a structured `.md` file you can file in an Obsidian vault — transcript, translation, and notes in one place.
+Drop a recorded lesson in `recordings/`. Gloss.md extracts the audio, transcribes the speech, translates it into English, and writes a structured `.md` note you can file in an Obsidian vault.
 
-## What it does
+The lesson can be about any subject. Gloss.md preserves the content; it does not teach the source language or add vocabulary drills.
 
-1. **Ingest** a lesson recording (video or audio).
-2. **Extract** speech audio suitable for transcription.
-3. **Transcribe** the spoken lesson.
-4. **Translate** the transcript into the language you study in.
-5. **Write** an Obsidian Markdown note with frontmatter, headings, and links you can search later.
+## Pipeline
+
+```
+recordings/*.mov
+        ↓  ffmpeg
+   audio/*.wav
+        ↓  OpenAI Whisper
+transcripts/*.txt + *.json
+        ↓  GPT
+ markdowns/*.md
+```
+
+`src/process.mjs` is the entry point. It runs the three steps in order:
+
+1. **Convert** (`src/convert.mjs`) — `ffmpeg` strips video and writes a WAV to `audio/`.
+2. **Transcribe** (`src/transcribe.mjs`) — Whisper (`whisper-1`) detects the language and produces a plain transcript plus timestamped JSON.
+3. **Markdown** (`src/markdown.mjs`) — GPT turns that JSON into bilingual Obsidian notes (source language + English).
 
 ## Project layout
 
 ```
 Gloss.md/
-├── input/          # Source lesson recordings
-├── output/         # Extracted audio and generated notes
-├── src/            # Pipeline code
+├── recordings/     # Source lesson videos
+├── audio/          # Extracted WAV files
+├── transcripts/    # Plain text + timestamped JSON
+├── markdowns/      # Generated Obsidian notes
+├── src/
+│   ├── process.mjs     # Full pipeline
+│   ├── convert.mjs     # Video → WAV
+│   ├── transcribe.mjs  # WAV → transcript
+│   └── markdown.mjs    # Transcript → bilingual .md
 └── package.json
 ```
 
-| Folder   | Role |
-|----------|------|
-| `input/` | Place lesson recordings here. Example: `2026-09-08-07-17-10.mov` (QuickTime). |
-| `output/` | Intermediate audio and the final `.md` notes. Example: `test.wav` (16-bit PCM, mono, 16 kHz). |
-| `src/` | Application source. Empty while the pipeline is being built. |
+Recordings, audio, transcripts, and generated notes are gitignored. Only `.gitkeep` files stay in those folders.
 
-The 16 kHz mono WAV in `output/` is the usual format for speech-to-text. That conversion is the first step toward a Markdown note.
+## Requirements
 
-## Intended pipeline
+- [Node.js](https://nodejs.org/) 22+
+- [ffmpeg](https://ffmpeg.org/) on your `PATH`
+- An [OpenAI API key](https://platform.openai.com/api-keys)
 
-```
-lesson recording (.mov / audio)
-        ↓
-   extract audio
-        ↓
-  16 kHz mono WAV
-        ↓
-   transcribe
-        ↓
-   translate
-        ↓
-  Obsidian .md
-```
-
-A generated note should be usable in Obsidian without extra cleanup: YAML frontmatter (title, date, source file, language), a transcript section, a translation section, and optional vocabulary or timestamps.
-
-## Current status
-
-Early setup. Node.js project (`gloss.md` v1.0.0, CommonJS). Folders and a sample recording are in place; the pipeline in `src/` is not implemented yet.
-
-## Requirements (planned)
-
-- [Node.js](https://nodejs.org/)
-- `ffmpeg` for audio extraction from video
-- A speech-to-text / translation backend (to be chosen)
-
-## Usage (planned)
+## Setup
 
 ```bash
 npm install
-# then a command such as:
-# npm run gloss.md -- input/2026-09-08-07-17-10.mov
 ```
 
-Output will land in `output/` as Markdown, ready to move or sync into an Obsidian vault.
+Create a `.env` in the project root:
+
+```
+OPENAI_API_KEY=your_key_here
+```
+
+## Usage
+
+Put a lesson recording in `recordings/`, then run `process.mjs`:
+
+```bash
+node src/process.mjs recordings/2026-09-08-07-17-10.mov
+```
+
+`process.mjs` takes the recording path, then calls:
+
+```
+convert.mjs  →  transcribe.mjs  →  markdown.mjs
+```
+
+That writes:
+
+| Output | Path |
+|--------|------|
+| Audio | `audio/<name>.wav` |
+| Plain transcript | `transcripts/<name>.txt` |
+| Timestamped transcript | `transcripts/<name>.json` |
+| Obsidian note | `markdowns/<name>.md` |
+
+### Individual steps
+
+Use these when you only need one stage. `process.mjs` already runs them in this order.
+
+```bash
+node src/convert.mjs recordings/2026-09-08-07-17-10.mov
+node src/transcribe.mjs 2026-09-08-07-17-10.wav
+node src/markdown.mjs 2026-09-08-07-17-10.json
+```
+
+`process.mjs` and `convert.mjs` take a path. `transcribe.mjs` and `markdown.mjs` take a filename and look in `audio/` and `transcripts/` respectively.
+
+## Generated notes
+
+Each Markdown file is meant to drop into Obsidian as-is:
+
+- **Title** inferred from the lesson
+- **Summary** — short English overview
+- **Key Takeaways** — main points as bullets
+- **Transcript** — timestamped sections with the original language and a direct English translation
+- **Notes** — frameworks, principles, and connections supported by the transcript (not a repeat of the summary)
+
+Whisper detects the source language. Display labels exist for Japanese, Korean, Chinese, Cantonese, French, Spanish, German, Italian, and Portuguese; other languages use a capitalized language name.
+
+Adjacent transcript segments that belong to the same sentence are merged. The model does not invent facts, add grammar lessons, or add a vocabulary section.
 
 ## License
 
