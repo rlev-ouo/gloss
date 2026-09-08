@@ -1,4 +1,5 @@
 import { execFileSync } from "child_process";
+import fs from "fs";
 import path from "path";
 
 const inputFile = process.argv[2];
@@ -8,18 +9,44 @@ if (!inputFile) {
   process.exit(1);
 }
 
-const name = path.parse(inputFile).name;
-const outputFile = `./audio/${name}.wav`;
+// ─────────────────────────────────────
+// Paths
+// ─────────────────────────────────────
 
-execFileSync("ffmpeg", [
-  "-i",
-  inputFile,
-  "-vn",
-  "-acodec",
-  "pcm_s16le",
-  outputFile,
-], {
-  stdio: "inherit",
+const name = path.parse(inputFile).name;
+
+const outputDir = "./audio";
+const outputPath = `${outputDir}/${name}.wav`;
+
+fs.mkdirSync(outputDir, {
+  recursive: true,
 });
 
-console.log(`✓ WAV saved to ${outputFile}`);
+// ─────────────────────────────────────
+// Convert
+// ─────────────────────────────────────
+
+console.log("→ Converting video to audio...");
+
+execFileSync(
+  "ffmpeg",
+  [
+    "-i",
+    inputFile,
+    "-vn",
+    "-acodec",
+    "pcm_s16le",
+    outputPath,
+  ],
+  {
+    stdio: "inherit",
+  }
+);
+
+// ─────────────────────────────────────
+// Complete
+// ─────────────────────────────────────
+
+console.log(
+  `✓ Audio saved to ${outputPath}`
+);

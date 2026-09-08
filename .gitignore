@@ -12,14 +12,18 @@ node_modules/
 recordings/*
 !recordings/.gitkeep
 
-# Extracted audio
+# Audio
 audio/*
 !audio/.gitkeep
 
-# Raw transcripts
+# Transcripts
 transcripts/*
 !transcripts/.gitkeep
 
-# Generated Markdown
+# Notes
 markdowns/*
 !markdowns/.gitkeep
+
+# Study
+annotations/*
+!annotations/.gitkeep
